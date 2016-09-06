@@ -1,20 +1,18 @@
-// hardware adc, datalogger to sdcard on CS10
 #include <SD.h>
 
-const int chipSelect = 10;
+const int chipSelect = 10;  // cs to sdcard
 
-int flag = 0;
-int debug = 1;
+int flag = 0; // set when ISR trips
+int debug = 1; // turns serial output on/off
 
 void setup()
 {
- // Open serial communications and wait for port to open:
- if(debug)
+  if(debug)
  {
   Serial.begin(9600);
   Serial.print("Initializing SD card...");
  }
-  pinMode(10, OUTPUT);
+  pinMode(chipSelect, OUTPUT);
   
   // see if the card is present and can be initialized:
   if(debug)
@@ -43,7 +41,7 @@ void loop()
 {
   // make a string for assembling the data to log:
   String dataString = "";
-  if (flag)
+  if (flag) // ISR has triggered
   {
     cli();
     long adc_result = ADCL;
@@ -56,7 +54,7 @@ void loop()
     dataFile.close();
     if (debug)
       Serial.println(dataString);
-    flag = 0;
+    flag = 0; // clear ISR flag
     sei();
   }  
   
