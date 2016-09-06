@@ -48,6 +48,8 @@ void loop()
     cli();
     long adc_result = ADCL;
     adc_result += (ADCH << 8);
+    dataString += String(millis());
+    dataString += ",";
     dataString += String(adc_result);
     File dataFile = SD.open("datalog.txt", FILE_WRITE);
     dataFile.println(dataString);
