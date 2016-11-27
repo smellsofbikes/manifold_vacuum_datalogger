@@ -1,12 +1,11 @@
-
 #include <Adafruit_GFX.h>    // Core graphics library
 #include "SWTFT.h" // Hardware-specific library
 #include <SD.h>
 
-#define	BLACK   0x0000
-#define	BLUE    0x001F
-#define	RED     0xF800
-#define	GREEN   0x07E0
+#define BLACK   0x0000
+#define BLUE    0x001F
+#define RED     0xF800
+#define GREEN   0x07E0
 #define CYAN    0x07FF
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0
@@ -27,25 +26,24 @@ void setup(void) {
   ADCSRB = 0x40;           // AD channels MUX on, free running mode
   ADCSRA |= (1<<ADSC);  // Start the conversion by setting bit 6 (=ADSC) in ADCSRA
   sei();                   // set interrupt flag
-  
+
   if (debug)
   {
   Serial.begin(9600);
   Serial.println(F("TFT LCD test"));
   }
   pinMode(chipSelect, OUTPUT);
-  
-  tft.reset();
-   
+tft.reset();
+
   uint16_t identifier = tft.readID();
 
  if (debug)
-  {  
+  {
     Serial.print(F("LCD driver chip: "));
     Serial.println(identifier, HEX);
   }
    tft.begin(identifier);
-   if (!SD.begin(chipSelect)) 
+   if (!SD.begin(chipSelect))
     {
       tft.setCursor(0, 0);
       tft.setTextColor(WHITE);  tft.setTextSize(3);
@@ -56,8 +54,17 @@ void setup(void) {
   tft.setCursor(0, 0);
   tft.setTextColor(WHITE);  tft.setTextSize(3);
   tft.println("Card initialized");
-  delay(1000);
-  testFillScreen();
+  delay(2000);
+
+}
+
+int file_exists(char buffer[10])
+{
+  FILE *fp;
+  if((fp = fopen(buffer, "r")) == NULL)
+    return(0);
+  fclose(fp);
+  return(1);
 }
 
 ISR(ADC_vect)
@@ -69,11 +76,22 @@ ISR(ADC_vect)
   sei();
 }
 
-void loop(void) 
-{
+void loop(void)
+  {
   testText();
   String dataString = "";
   long timer_mills = 0;
+
+  int i, n;
+  char buffer[10];
+  i = 1;
+  while(1)
+  {
+    n = sprintf(buffer, "data%d", i);
+    if(file_exists(buffer) == 0)
+      break;
+    i++
+  }
   while(1)
   {
     dataString = "";
@@ -82,7 +100,7 @@ void loop(void)
       dataString += String(millis());
       dataString += ",";
       dataString += String(adcval);
-      File dataFile = SD.open("datalog.txt", FILE_WRITE);
+      File dataFile = SD.open(buffer, FILE_WRITE);
       dataFile.println(dataString);
       dataFile.close();
       if (debug)
@@ -93,19 +111,9 @@ void loop(void)
   tft.setCursor(0, 0);
   tft.setTextColor(WHITE);  tft.setTextSize(3);
   tft.println("adc val: ");
-  tft.println(adcval); 
+  tft.println(adcval);
   delay(1000);
   }
-}
-
-unsigned long testFillScreen() {
-  unsigned long start = micros();
-  tft.fillScreen(BLACK);
-  tft.fillScreen(RED);
-  tft.fillScreen(GREEN);
-  tft.fillScreen(BLUE);
-  tft.fillScreen(BLACK);
-  return micros() - start;
 }
 
 unsigned long testText() {
@@ -118,4 +126,8 @@ unsigned long testText() {
   tft.println(start);
   return micros() - start;
 }
+
+
+
+
 
